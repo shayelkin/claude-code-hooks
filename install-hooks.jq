@@ -1,6 +1,6 @@
 #!/bin/sh --
 # \
-exec jq -Mf --arg dir "$(cd "$(dirname "$0")" && pwd)" "$0" "$@"
+[ $# -eq 0 ] && set -- "$HOME/.claude/settings.json"; t=$(mktemp) && jq -Mf --arg dir "$(cd "$(dirname "$0")" && pwd)" "$0" "$1" > "$t" && cat "$t" > "$1"; rc=$?; rm -f "$t"; exit $rc
 # jq code follows:
 
 def hasCommand(cmd): any(.[]?; .type == "command" and .command == cmd);
@@ -18,6 +18,6 @@ def addHookGroup(event; matcher; cmd):
     ))
   end;
 
-addHookGroup("PostToolUse"; "Edit|MutliEdit|Write"; "\($dir)/edit-hook.sh")
+addHookGroup("PostToolUse"; "Edit|MultiEdit|Write"; "\($dir)/edit-hook.sh")
 | addHookGroup("PreToolUse"; "Bash"; "\($dir)/bash-pretool-hook.jq")
 | .statusLine = {type: "command", command: "\($dir)/statusline.jq"}
