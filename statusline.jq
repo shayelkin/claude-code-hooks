@@ -1,7 +1,13 @@
 #!/bin/sh --
 # \
-exec jq -Mf --raw-output "$0" "$@"
+exec jq -Mf --raw-output --argjson cols "${COLUMNS:-0}" "$0" "$@"
 # jq code follows:
+
+def trim_left(s; avail):
+  if avail == null or (s | length) <= avail then s
+  elif avail <= 1 then "…"
+  else "…" + s[-(avail - 1):]
+  end;
 
 def rep(s; n): if n <= 0 then "" else s * n end;
 
@@ -16,7 +22,7 @@ def bar(p):
             rep(" "; $empty)) as $b |
           if p > 90 then "[31m" + $b + "[0m" else $b end;
 
-.model.display_name
+(.model.display_name
   + " · Ctx: \(bar(if .context_window.current_usage then
               .context_window.current_usage as $usage |
                 (.context_window.current_usage.input_tokens +
@@ -31,9 +37,20 @@ def bar(p):
     else
       ""
     end
+  + if .rate_limits.seven_day then
+      " · 7d: \(bar(.rate_limits.seven_day.used_percentage))"
+    else
+      ""
+    end
   + if .cost.total_cost_usd then
       " · $\(.cost.total_cost_usd * 1000 | round / 1000)"
     else
       ""
     end
-  + " · \(.workspace.current_dir)"
+  + " · ") as $pre |
+  (if $cols > 0 then
+      $cols - 4 - ($pre | gsub("\u001b\\[[0-9;]*m"; "") | length)
+   else
+       null
+   end) as $avail |
+   $pre + (.workspace.current_dir | tostring | trim_left(.; $avail))
