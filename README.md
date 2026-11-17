@@ -9,6 +9,7 @@ eradicating.
 
 This code was written with assistance from the following AI models:
 
+- Claude Sonnet 5.5 (Anthropic)
 - Claude Sonnet 5 (Anthropic)
 - Claude Opus 4.6 (Anthropic)
 
